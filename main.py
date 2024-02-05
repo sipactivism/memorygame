@@ -3,37 +3,19 @@ import numpy as np
 import mediapipe as mp
 import random
 import pymsgbox
-#from playsound import playsound
 from time import time, sleep
 from PIL import ImageFont, ImageDraw, Image
-#import tkinter
-#import tkinter.ttk
-#import tkinter.messagebox
 
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision, BaseOptions
 from mediapipe.tasks.python.vision import GestureRecognizer, GestureRecognizerOptions, HandLandmarker, HandLandmarkerOptions
 
-# buttons
-MB_OK = 0x0
-MB_OKCXL = 0x01
-MB_YESNOCXL = 0x03
-MB_YESNO = 0x04
-MB_HELP = 0x4000
-
-# icons
-ICON_EXCLAIM = 0x30
-ICON_INFO = 0x40
-ICON_STOP = 0x10
-
 # get gesture_recognizer.task from https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/latest/gesture_recognizer.task
 GESTURE_RECOGNITION_OPTIONS = BaseOptions(model_asset_path="gesture_recognizer.task")
-#LANDMARKER_OPTIONS = BaseOptions(model_asset_path="hand_landmarker.task")
 GESTURES = {"Thumb_Up": "👍","Thumb_Down": "👎","Open_Palm": "🖐","Closed_Fist": "✊","Victory": "✌","None":"❌"}
 TIME_TO_GUESS = 10
 
 recognizer = GestureRecognizer.create_from_options(GestureRecognizerOptions(base_options=GESTURE_RECOGNITION_OPTIONS))
-#landmarker = HandLandmarker.create_from_options(HandLandmarkerOptions(base_options=LANDMARKER_OPTIONS))
 
 """
 gestures:
@@ -42,6 +24,7 @@ thumbs down: Thumb_Down
 open hand: Open_Palm
 closed hand: Closed_Fist
 """
+
 def draw_emoji(frame,text: str,loc: tuple):
     pil_img = Image.fromarray(frame)
     draw = ImageDraw.Draw(pil_img)
@@ -57,7 +40,6 @@ def game_loop(cap: cv2.VideoCapture):
     # choose random gesture
     while running:
         past_gestures.append(random.choice(gesture_list))
-        #print(past_gestures)
         for i,gesture in enumerate(past_gestures):
             text = "❓"
             found = False
@@ -89,8 +71,6 @@ def game_loop(cap: cv2.VideoCapture):
                 # just clean up the presentation a bit
                 remaining_time = round(end_time - time(),2)
                 # just a nice bar for the top
-                # TODO: work in progress
-                cv2.rectangle(frame,(0,0),(int(width),0),(0,255,0),3)
                 if remaining_time < 0:
                     text = GESTURES[gesture]
                     remaining_time = 0
@@ -118,7 +98,6 @@ def game_loop(cap: cv2.VideoCapture):
             correct_gestures += 1
             sleep(1)
     again = pymsgbox.confirm(f"You remembered {correct_gestures} gesture(s)! Would you like to try again?","Try again?",buttons=["Yes","No"])
-    #result = tkinter.messagebox.askyesno("Play again?",f"You remembered {len(past_gestures)} gestures. Do you want to play again?")
     if again == "Yes":
         # run entire function again
         game_loop(cap)
@@ -129,31 +108,5 @@ def setup():
     
     cap.release()
     cv2.destroyAllWindows()
-
-"""
-with GestureRecognizer.create_from_options(GestureRecognizerOptions(base_options=BASE_OPTIONS)) as recognizer:
-        # make game loop
-        while cap.isOpened():
-            ret, frame = cap.read()
-            # convert to mediapipe's image format
-            mp_img = mp.Image(image_format=mp.ImageFormat.SRGB,data=frame)
-            # feed into recognizer
-            result = recognizer.recognize(mp_img)
-            # check if gesture is found
-            if len(result.gestures) > 0:
-                gesture = result.gestures[0][0]
-                # add text
-                pil_img = Image.fromarray(frame)
-                draw = ImageDraw.Draw(pil_img)
-                draw.text((50,50),str(GESTURES[gesture.category_name]),fill=(0,0,0),font=ImageFont.truetype("Noto_Emoji\\static\\NotoEmoji-Regular.ttf",50))
-                frame = np.array(pil_img)
-    
-                #cv2.putText(frame,str(GESTURES[gesture.category_name]),(50,50),1,3,(255,0,0),1)
-            
-            cv2.imshow("frame",frame)
-    
-            if cv2.waitKey(10) & 0xFF == ord("q"):
-                break
-"""
 
 setup()
